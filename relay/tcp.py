@@ -1,8 +1,8 @@
 import sys
 import socket
 import threading
-import status
-import time
+from relay import status
+
 
 _kill = False
 _relayport = 0
@@ -14,6 +14,7 @@ _servers = 0
 
 _socks = []
 
+
 def acceptclients():
 	global _socks
 
@@ -24,7 +25,7 @@ def acceptclients():
 	while True:
 		clientconn, addr = clientsock.accept()
 
-		if (_kill == True):
+		if _kill == True:
 			clientsock.close()
 			for sock in _socks:
 				sock.close()
@@ -36,11 +37,12 @@ def acceptclients():
 		_socks.append(clientconn)
 		_socks.append(serversock)
 
-		clientthread = threading.Thread(target = client, kwargs = {'client': clientconn, 'server': serversock})
+		clientthread = threading.Thread(target=client, kwargs={'client': clientconn, 'server': serversock})
 		clientthread.start()
 
-		serverthread = threading.Thread(target = server, kwargs = {'client': clientconn, 'server': serversock})
+		serverthread = threading.Thread(target=server, kwargs={'client': clientconn, 'server': serversock})
 		serverthread.start()
+
 
 def close(client, server):
 	try:
@@ -53,6 +55,7 @@ def close(client, server):
 	except socket.error:
 		pass
 
+
 def client(client, server):
 	global _clients
 	_clients += 1
@@ -60,7 +63,7 @@ def client(client, server):
 		try:
 			data = client.recv(1)
 
-			if (data == ""):
+			if data == "":
 				close(client, server)
 				break
 
@@ -71,6 +74,7 @@ def client(client, server):
 			break
 	_clients -= 1
 
+
 def server(client, server):
 	global _servers
 	_servers += 1
@@ -78,7 +82,7 @@ def server(client, server):
 		try:
 			data = server.recv(1)
 
-			if (data == ""):
+			if data == "":
 				close(client, server)
 				break
 
@@ -89,6 +93,7 @@ def server(client, server):
 			break
 	_servers -= 1
 
+
 def start(relayport, remoteaddress, remoteport):
 	global _relayport
 	global _remoteaddress
@@ -98,13 +103,14 @@ def start(relayport, remoteaddress, remoteport):
 	_remoteaddress = remoteaddress
 	_remoteport = remoteport
 	
-	acceptthread = threading.Thread(target = acceptclients)
+	acceptthread = threading.Thread(target=acceptclients)
 	acceptthread.start()
+
 
 def stop():
 	global _kill
 	_kill = True
-	#connect to the input port therefore allowing the thread to close
+	# connect to the input port therefore allowing the thread to close
 	quitsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	quitsock.connect(("127.0.0.1", _relayport))
 	quitsock.close()
