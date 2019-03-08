@@ -4,52 +4,52 @@ import os
 import threading
 
 
-bytestoremote = 0
-bytesfromremote = 0
+bytes_to_remote = 0
+bytes_from_remote = 0
 
-_relayport = 0
-_remoteaddress = ""
-_remoteport = 0
+_relay_port = 0
+_remote_address = ''
+_remote_port = 0
 
 
-def reportbandwidth():
-	global bytestoremote
-	global bytesfromremote
+def report_bandwidth():
+	global bytes_to_remote
+	global bytes_from_remote
 	step = 0
 	while True:
 		time.sleep(1)
-		if sys.platform == "win32":
+		if sys.platform == 'win32':
 			os.system('cls')
 		else:
 			os.system('clear')
-		print("Relaying on port {0} to {1}:{2}".format(_relayport, _remoteaddress, _remoteport))
-		print("From remote: {0:.6f}MB/s | To remote: {1:.6f}MB/s".format(
-			float(bytesfromremote)/1000000, float(bytestoremote)/1000000))
+		print('Relaying on port {0} to {1}:{2}'.format(_relay_port, _remote_address, _remote_port))
+		print('From remote: {0:.6f}MB/s | To remote: {1:.6f}MB/s'.format(
+			float(bytes_from_remote) / 1000000, float(bytes_to_remote) / 1000000))
 		if step == 0:
-			print("\\")
+			print('\\')
 			step += 1
 		elif step == 1:
-			print("|")
+			print('|')
 			step += 1
 		elif step == 2:
-			print("/")
+			print('/')
 			step += 1
 		elif step == 3:
-			print("-")
+			print('-')
 			step = 0
-		bytesfromremote = 0
-		bytestoremote = 0
+		bytes_from_remote = 0
+		bytes_to_remote = 0
 
 
-def start(relayport, remoteaddress, remoteport):
-	global _relayport
-	global _remoteaddress
-	global _remoteport
+def start(relay_port, remote_address, remote_port):
+	global _relay_port
+	global _remote_address
+	global _remote_port
 	
-	reportbandwidththread = threading.Thread(target=reportbandwidth)
-	reportbandwidththread.daemon = True
-	reportbandwidththread.start()
+	report_bandwidth_thread = threading.Thread(target=report_bandwidth)
+	report_bandwidth_thread.daemon = True
+	report_bandwidth_thread.start()
 
-	_relayport = relayport
-	_remoteaddress = remoteaddress
-	_remoteport = remoteport
+	_relay_port = relay_port
+	_remote_address = remote_address
+	_remote_port = remote_port

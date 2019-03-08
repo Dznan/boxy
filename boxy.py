@@ -1,18 +1,9 @@
-import socket
-import threading
 import sys
-import getopt
-import os
+import argparse
+
 from relay import udp
 from relay import tcp
 from relay import status
-
-relayport = 0
-remoteport = 0
-remoteaddress = ""
-protocol = "UDP"
-
-help_string = "Invalid arguments, usage:\nboxy.py -i <input port> -p <remote port> -a <remote address> [-t]"
 
 
 def quit():
@@ -26,38 +17,33 @@ def quit():
     sys.exit(0)
 
 
+def check_port_range(port):
+    port = int(port)
+    if not (0 < port <= 65535):
+        raise argparse.ArgumentTypeError('{} is an invalid port!'.format(port))
+    return port
+
+
 # process args
-try:
-    options, args = getopt.getopt(sys.argv[1:], "i:p:a:t")
-except getopt.GetoptError:
-    print(help_string)
-    sys.exit(2)
+parser = argparse.ArgumentParser(description='boxy tcp/udp relay')
+parser.add_argument('--relay_port', '-i', type=check_port_range, required=True, help='local listen port')
+parser.add_argument('--remote_port', '-p', type=check_port_range, required=True, help='remote listen port')
+parser.add_argument('--remote_address', '-a', type=str, required=True, help='remote ip address')
+parser.add_argument('--TCP', '-t', action='store_true', default=False, help='enable TCP relay')
+args = parser.parse_args()
 
-try:
-    for option, arg in options:
-        if option == "-i":
-            relayport = int(arg)
-        elif option == "-p":
-            remoteport = int(arg)
-        elif option == "-a":
-            remoteaddress = arg
-        elif option == "-t":
-            protocol = "TCP"
-except ValueError:
-    print(help_string)
-    sys.exit(2)
+relay_port = args.relay_port
+remote_port = args.remote_port
+remote_address = args.remote_address
+protocol = 'TCP' if args.TCP else 'UDP'
 
-if not (0 < relayport <= 65535 and 0 < remoteport <= 65535 and remoteaddress != ""):
-    print(help_string)
-    sys.exit(2)
-
-print("Relay starting on port {0}, relaying {1} to {2}:{3}".format(relayport, protocol, remoteaddress, remoteport))
+print("Relay starting on port {0}, relaying {1} to {2}:{3}".format(relay_port, protocol, remote_address, remote_port))
 
 if protocol == "UDP":
-    udp.start(relayport, remoteaddress, remoteport)
+    udp.start(relay_port, remote_address, remote_port)
 else:
-    tcp.start(relayport, remoteaddress, remoteport)
-status.start(relayport, remoteaddress, remoteport)
+    tcp.start(relay_port, remote_address, remote_port)
+status.start(relay_port, remote_address, remote_port)
 
 try:
     while input() != "quit":
